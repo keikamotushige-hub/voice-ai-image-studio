@@ -3,7 +3,6 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="description" content="Akaban Haitatsuin — Online/offline delivery job simulator (fiction).">
     <title>Akaban Haitatsuin</title>
     <style>
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -23,7 +22,9 @@
             background: var(--bg); border-radius: 36px; border: 3px solid #2c2c34;
             box-shadow: 0 24px 80px rgba(0,0,0,0.7);
             display: flex; flex-direction: column; overflow: hidden; position: relative;
+            transition: box-shadow 0.4s;
         }
+        .phone.vibin { box-shadow: 0 0 40px rgba(0,200,83,0.15), 0 24px 80px rgba(0,0,0,0.7); }
         .notch {
             position: absolute; top: 0; left: 50%; transform: translateX(-50%);
             width: 120px; height: 28px; background: #000; border-radius: 0 0 18px 18px; z-index: 100;
@@ -39,17 +40,16 @@
             padding: 36px 16px 6px; font-size: 0.72rem; color: var(--muted); flex-shrink: 0;
         }
         .status-bar .time { color: var(--text); font-weight: 600; font-size: 0.85rem; }
-
-        /* Uber Eats風 オンライン/オフライン */
         .online-bar {
             margin: 0 12px 10px; padding: 12px 14px; flex-shrink: 0;
             background: rgba(22,22,26,0.95); border: 1px solid var(--border);
             border-radius: 16px; display: flex; align-items: center; justify-content: space-between; gap: 12px;
+            transition: border-color 0.3s;
         }
         .online-bar.online-active { border-color: rgba(0,200,83,0.45); }
         .online-info { flex: 1; min-width: 0; }
         .online-info .status-title { font-size: 0.95rem; font-weight: 800; line-height: 1.3; }
-        .online-info .status-en { font-size: 0.62rem; color: var(--muted); margin-top: 3px; line-height: 1.4; }
+        .online-info .status-en { font-size: 0.62rem; color: var(--muted); margin-top: 3px; }
         .online-bar.online-active .status-title { color: var(--accent); }
         .toggle {
             width: 52px; height: 30px; border-radius: 15px; border: none; cursor: pointer;
@@ -62,111 +62,118 @@
             transition: transform 0.25s; box-shadow: 0 2px 4px rgba(0,0,0,0.3);
         }
         .toggle.on::after { transform: translateX(22px); }
-
         .hero { padding: 0 16px 6px; flex-shrink: 0; }
         .hero h1 { font-size: 1.15rem; font-weight: 900; }
         .hero .sub-ja { font-size: 0.72rem; color: #aaa; margin-top: 2px; }
         .hero .sub-en { font-size: 0.62rem; color: var(--muted); margin-top: 2px; }
-
         .stats {
-            display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px;
+            display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px;
             margin: 0 12px 10px; flex-shrink: 0;
         }
         .stat {
             background: rgba(22,22,26,0.92); border: 1px solid var(--border);
-            border-radius: 12px; padding: 10px 6px; text-align: center; min-height: 72px;
+            border-radius: 12px; padding: 8px 4px; text-align: center; min-height: 68px;
             display: flex; flex-direction: column; justify-content: space-between;
         }
-        .stat-head { line-height: 1.35; margin-bottom: 6px; }
-        .stat .lbl { display: block; font-size: 0.62rem; color: var(--muted); }
-        .stat .lbl-en { display: block; font-size: 0.52rem; color: #555; margin-top: 2px; }
-        .stat .val { font-size: 1.05rem; font-weight: 800; line-height: 1.2; }
+        .stat-head { line-height: 1.3; margin-bottom: 4px; }
+        .stat .lbl { display: block; font-size: 0.55rem; color: var(--muted); }
+        .stat .lbl-en { display: block; font-size: 0.48rem; color: #555; margin-top: 1px; }
+        .stat .val { font-size: 0.95rem; font-weight: 800; }
         .stat .val.green { color: var(--accent); }
         .stat .val.blue { color: #4fc3f7; }
         .stat .val.gold { color: #ffd700; }
-
+        .stat .val.pink { color: #ff8fab; }
+        .whisper {
+            margin: 0 12px 8px; padding: 8px 12px; flex-shrink: 0;
+            font-size: 0.68rem; color: #777; font-style: italic; line-height: 1.5;
+            text-align: center; min-height: 2.4em;
+            transition: opacity 0.5s;
+        }
         .job-zone {
-            flex: 1; margin: 0 12px 10px; padding: 20px 16px; min-height: 200px;
+            flex: 1; margin: 0 12px 10px; padding: 20px 16px; min-height: 190px;
             background: rgba(22,22,26,0.92); border: 1px solid var(--border);
             border-radius: 18px; display: flex; flex-direction: column;
             align-items: center; justify-content: center; position: relative;
         }
         .offline-panel { text-align: center; padding: 12px; }
-        .offline-panel .icon { font-size: 2.5rem; margin-bottom: 12px; opacity: 0.5; }
-        .offline-panel h2 { font-size: 1rem; margin-bottom: 6px; }
-        .offline-panel p { font-size: 0.72rem; color: var(--muted); line-height: 1.6; }
-        .offline-panel .en { font-size: 0.65rem; color: #555; margin-top: 8px; }
-
+        .offline-panel .icon { font-size: 2.2rem; margin-bottom: 10px; opacity: 0.6; }
+        .offline-panel h2 { font-size: 0.95rem; margin-bottom: 6px; }
+        .offline-panel p { font-size: 0.72rem; color: var(--muted); line-height: 1.65; }
+        .offline-panel .en { font-size: 0.62rem; color: #555; margin-top: 8px; }
         .job-card { width: 100%; text-align: center; animation: pop 0.35s ease; }
         .job-card.hidden, .offline-panel.hidden { display: none; }
         @keyframes pop { from { opacity:0; transform:scale(0.95); } to { opacity:1; transform:scale(1); } }
         .job-badge {
-            display: inline-block; font-size: 0.62rem; padding: 4px 10px;
-            background: rgba(0,200,83,0.15); color: var(--accent);
-            border-radius: 20px; margin-bottom: 12px;
+            display: inline-block; font-size: 0.6rem; padding: 4px 10px;
+            background: rgba(0,200,83,0.15); color: var(--accent); border-radius: 20px; margin-bottom: 10px;
         }
-        .job-title { font-size: 1.1rem; font-weight: 800; line-height: 1.45; margin-bottom: 4px; }
-        .job-en { font-size: 0.68rem; color: var(--muted); margin-bottom: 12px; line-height: 1.4; }
-        .job-pay { font-size: 2rem; font-weight: 900; color: #ffd700; margin-bottom: 16px; }
+        .job-title { font-size: 1.05rem; font-weight: 800; line-height: 1.45; margin-bottom: 4px; }
+        .job-en { font-size: 0.65rem; color: var(--muted); margin-bottom: 10px; }
+        .job-pay { font-size: 1.9rem; font-weight: 900; color: #ffd700; margin-bottom: 14px; }
         .job-actions { display: flex; gap: 10px; width: 100%; }
         .btn {
             flex: 1; padding: 14px 8px; border: none; border-radius: 14px;
-            font-size: 0.92rem; font-weight: 800; cursor: pointer;
+            font-size: 0.9rem; font-weight: 800; cursor: pointer;
         }
         .btn-accept { background: var(--accent); color: #000; }
         .btn-refuse { background: var(--danger); color: #fff; }
-        .btn-sub { display: block; font-size: 0.55rem; font-weight: 500; opacity: 0.85; margin-top: 3px; }
+        .btn-sub { display: block; font-size: 0.52rem; font-weight: 500; opacity: 0.85; margin-top: 3px; }
         .btn:active { transform: scale(0.97); }
-
         .result-toast {
             position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
-            background: rgba(0,0,0,0.8); border-radius: 18px; z-index: 10;
-            font-size: 1rem; font-weight: 800; text-align: center; padding: 20px;
-            line-height: 1.5; white-space: pre-line; pointer-events: none;
+            background: rgba(0,0,0,0.82); border-radius: 18px; z-index: 10;
+            font-size: 0.95rem; font-weight: 800; text-align: center; padding: 20px;
+            line-height: 1.55; white-space: pre-line; pointer-events: none;
             animation: fadeIn 0.2s ease;
         }
         @keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
-
         .bottom-area {
             flex-shrink: 0; margin-top: auto;
             padding: 0 12px 16px; border-top: 1px solid var(--border);
             background: rgba(10,10,12,0.98);
         }
-        .volume-row { padding: 10px 0 8px; }
-        .volume-row label { font-size: 0.62rem; color: var(--muted); display: block; line-height: 1.4; }
-        .volume-row input { width: 100%; margin-top: 6px; accent-color: var(--accent); }
-
+        .volume-row { padding: 10px 0 6px; }
+        .volume-row label { font-size: 0.6rem; color: var(--muted); display: block; line-height: 1.4; }
+        .volume-row input { width: 100%; margin-top: 5px; accent-color: var(--accent); }
         .ad-frame {
             border-radius: 12px; overflow: hidden;
-            border: 1px solid rgba(0,200,83,0.25); background: rgba(22,22,26,0.9);
-            margin-bottom: 8px;
+            border: 1px solid rgba(255,255,255,0.06); background: rgba(22,22,26,0.9);
+            margin-bottom: 8px; transition: border-color 0.4s;
         }
+        .ad-frame.glow { border-color: rgba(0,200,83,0.35); }
         .ad-teaser {
-            padding: 10px 12px; cursor: pointer; display: flex;
-            align-items: center; justify-content: space-between; gap: 8px;
-            font-size: 0.7rem; color: #999;
+            padding: 11px 12px; cursor: pointer; display: flex;
+            align-items: flex-start; justify-content: space-between; gap: 10px;
+            font-size: 0.7rem; color: #999; line-height: 1.55; text-align: left;
         }
-        .ad-teaser .arrow { color: var(--accent); transition: transform 0.3s; }
+        .ad-teaser .arrow { color: var(--accent); flex-shrink: 0; margin-top: 2px; transition: transform 0.3s; }
         .ad-frame.open .ad-teaser .arrow { transform: rotate(90deg); }
         .ad-body {
             max-height: 0; overflow: hidden; opacity: 0;
-            transition: max-height 0.4s, opacity 0.3s, padding 0.3s; padding: 0 12px;
+            transition: max-height 0.45s, opacity 0.35s, padding 0.35s; padding: 0 12px;
         }
-        .ad-frame.open .ad-body { max-height: 180px; opacity: 1; padding: 0 12px 12px; }
-        .ad-body p { font-size: 0.72rem; color: #aaa; line-height: 1.5; margin-bottom: 8px; }
+        .ad-frame.open .ad-body { max-height: 220px; opacity: 1; padding: 0 12px 14px; }
+        .ad-body p { font-size: 0.72rem; color: #aaa; line-height: 1.65; margin-bottom: 10px; }
+        .invite-code {
+            font-size: 0.65rem; color: #666; margin-bottom: 8px;
+            font-family: monospace; letter-spacing: 0.05em;
+        }
+        .invite-code span { color: var(--accent); font-weight: 700; }
         .ad-link {
-            display: block; padding: 11px; border-radius: 10px; text-align: center;
-            background: linear-gradient(135deg, #00a844, #00c853);
-            color: #000; font-weight: 800; font-size: 0.8rem; text-decoration: none;
+            display: block; padding: 12px; border-radius: 10px; text-align: center;
+            background: linear-gradient(135deg, #1a6b3c, #00c853);
+            color: #fff; font-weight: 700; font-size: 0.78rem; text-decoration: none;
+            line-height: 1.4;
         }
-        .footer-note { font-size: 0.55rem; color: #444; text-align: center; line-height: 1.5; padding-top: 6px; }
+        .ad-link small { display: block; font-size: 0.58rem; opacity: 0.85; margin-top: 3px; font-weight: 500; }
+        .footer-note { font-size: 0.52rem; color: #444; text-align: center; line-height: 1.5; padding-top: 6px; }
         .studio-link { text-align: center; padding: 4px 0; }
-        .studio-link a { font-size: 0.55rem; color: #555; text-decoration: none; }
+        .studio-link a { font-size: 0.52rem; color: #555; text-decoration: none; }
         .hidden { display: none !important; }
     </style>
 </head>
 <body>
-    <div class="phone">
+    <div class="phone" id="phone">
         <div class="notch"></div>
         <div class="app-screen">
             <div class="status-bar">
@@ -174,11 +181,10 @@
                 <span>Akaban Haitatsuin</span>
             </div>
 
-            <!-- オンライン / オフライン モニター -->
             <div class="online-bar" id="onlineBar">
                 <div class="online-info">
                     <div class="status-title" id="onlineTitle">オフライン</div>
-                    <div class="status-en" id="onlineEn">Offline — no orders, no pay</div>
+                    <div class="status-en" id="onlineEn">Rest mode — flip when ready</div>
                 </div>
                 <button class="toggle" id="toggleOnline" aria-label="Toggle online"></button>
             </div>
@@ -191,68 +197,62 @@
 
             <div class="stats">
                 <div class="stat">
-                    <div class="stat-head">
-                        <span class="lbl">評価</span>
-                        <span class="lbl-en">Rating</span>
-                    </div>
+                    <div class="stat-head"><span class="lbl">評価</span><span class="lbl-en">Rating</span></div>
                     <div class="val green" id="rating">72</div>
                 </div>
                 <div class="stat">
-                    <div class="stat-head">
-                        <span class="lbl">応答率</span>
-                        <span class="lbl-en">Response</span>
-                    </div>
+                    <div class="stat-head"><span class="lbl">応答</span><span class="lbl-en">Resp.</span></div>
                     <div class="val blue" id="response">94%</div>
                 </div>
                 <div class="stat">
-                    <div class="stat-head">
-                        <span class="lbl">売上</span>
-                        <span class="lbl-en">Earnings</span>
-                    </div>
+                    <div class="stat-head"><span class="lbl">売上</span><span class="lbl-en">Earn</span></div>
                     <div class="val gold" id="gross">¥0</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-head"><span class="lbl">仲間</span><span class="lbl-en">Crew</span></div>
+                    <div class="val pink" id="crew">1</div>
                 </div>
             </div>
 
+            <p class="whisper" id="whisper">夜の街は、知らないルートが待ってる。</p>
+
             <div class="job-zone" id="jobZone">
-                <!-- オフライン -->
                 <div class="offline-panel" id="offlinePanel">
-                    <div class="icon">💤</div>
-                    <h2>オフライン中</h2>
-                    <p>案件は来ない。報酬もゼロ。<br>オンラインにすると配達リクエストが届く。</p>
-                    <p class="en">Offline — no jobs, no money.<br>Flip the switch to go online.</p>
+                    <div class="icon">🌙</div>
+                    <h2>今日はここまで</h2>
+                    <p>スイッチをオンにすると、<br>知らない注文が届き始める。</p>
+                    <p class="en">Something new might be waiting.<br>Go online when you're curious.</p>
                 </div>
-                <!-- オンライン：受ける / 断る -->
                 <div class="job-card hidden" id="jobCard">
-                    <span class="job-badge">新規リクエスト / New request</span>
+                    <span class="job-badge">📍 New request</span>
                     <div class="job-title" id="jobTitle">—</div>
                     <p class="job-en" id="jobEn">—</p>
                     <div class="job-pay" id="jobPay">¥0</div>
                     <div class="job-actions">
-                        <button class="btn btn-accept" id="btnAccept">
-                            受ける<span class="btn-sub">Accept</span>
-                        </button>
-                        <button class="btn btn-refuse" id="btnRefuse">
-                            断る<span class="btn-sub">Decline</span>
-                        </button>
+                        <button class="btn btn-accept" id="btnAccept">受ける<span class="btn-sub">Accept</span></button>
+                        <button class="btn btn-refuse" id="btnRefuse">断る<span class="btn-sub">Decline</span></button>
                     </div>
                 </div>
             </div>
 
-            <!-- 下部：リンクはここ -->
             <div class="bottom-area">
                 <div class="volume-row">
-                    <label>🔊 ストレス解放 / Stress Volume</label>
-                    <input type="range" id="volume" min="0" max="100" value="0">
+                    <label>🎵 BGM & FX / Game sound</label>
+                    <input type="range" id="volume" min="0" max="100" value="30">
                 </div>
                 <div class="ad-frame" id="adFrame">
                     <div class="ad-teaser" id="adTeaser">
-                        <span>リンクは下にあります / Link below ↓</span>
+                        <span id="adTeaserText">知らない道、一緒に走る仲間が増えてるらしい。</span>
                         <span class="arrow">›</span>
                     </div>
                     <div class="ad-body">
-                        <p>同じ苦しみを分かち合う仲間を、さりげなく募集してる。<br><span style="font-size:0.62rem;color:#666">Fictional promo only</span></p>
+                        <p>やったことない夜のルート、試してみない？<br>下のリンクに合言葉が入ってる。さりげなく。</p>
+                        <p class="invite-code">招待コード / Invite: <span>mwxmfvc</span></p>
                         <a class="ad-link" href="https://www.uber.com/signup/drive/deliver/?invite_code=mwxmfvc"
-                           target="_blank" rel="noopener noreferrer">＞＞ ここから一緒に稼ぐ ＜＜</a>
+                           target="_blank" rel="noopener noreferrer">
+                            新しい仲間になる
+                            <small>Join the night crew — link below</small>
+                        </a>
                     </div>
                 </div>
                 <p class="studio-link">
@@ -264,22 +264,41 @@
     </div>
 
     <script>
+        const INVITE = 'mwxmfvc';
+        const INVITE_URL = `https://www.uber.com/signup/drive/deliver/?invite_code=${INVITE}`;
+
         const JOBS = [
-            { title: '100円: 階段3階', en: '¥100 — 3rd floor stairs', pay: 100 },
-            { title: '100円: エレベーターなし5階', en: '¥100 — 5F no elevator', pay: 100 },
-            { title: '100円: 雨の中待機', en: '¥100 — wait in rain', pay: 100 },
-            { title: '100円: ピンズレ', en: '¥100 — wrong pin', pay: 100 },
-            { title: '300円: 3km・30分以内', en: '¥300 — 3km rush', pay: 300 },
-            { title: '300円: チャイム禁止', en: '¥300 — no doorbell', pay: 300 },
-            { title: '300円: 置き配禁止', en: '¥300 — hand only', pay: 300 },
-            { title: '300円: 店舗待ち30分', en: '¥300 — 30min wait', pay: 300 },
+            { title: '100円: 階段3階', en: '¥100 — stairs, 3rd floor', pay: 100 },
+            { title: '100円: エレベーターなし', en: '¥100 — no elevator', pay: 100 },
+            { title: '100円: 雨の中', en: '¥100 — raining', pay: 100 },
+            { title: '100円: 初めてのエリア', en: '¥100 — new area', pay: 100 },
+            { title: '300円: 3km先', en: '¥300 — 3km away', pay: 300 },
+            { title: '300円: チャイム禁止', en: '¥300 — quiet delivery', pay: 300 },
+            { title: '300円: 深夜ルート', en: '¥300 — late night', pay: 300 },
+            { title: '300円: 知らない店舗', en: '¥300 — new restaurant', pay: 300 },
         ];
 
-        let isOnline = false;
-        let rating = 72, response = 94, gross = 0;
-        let currentJob = null, jobTimer = null;
+        const WHISPERS = [
+            '夜の街は、知らないルートが待ってる。',
+            '断ってもいい。受けてもいい。どっちも夜の一部。',
+            '仲間が増えると、知らない道が少し楽しくなる。',
+            'やったことないこと、今夜一つだけ試す？',
+            '下に、合言葉があるらしい。気になったら見てみて。',
+            'The night has routes you\'ve never seen.',
+        ];
+
+        const AD_TEASERS = [
+            '知らない道、一緒に走る仲間が増えてるらしい。',
+            '合言葉 mwxmfvc — 下のリンクに入ってる。',
+            '新しい夜のルート、試してみる人が増えてきた。',
+            '知ってる顔が、もう一人増えるかも。',
+        ];
+
+        let isOnline = false, rating = 72, response = 94, gross = 0, crew = 1;
+        let currentJob = null, jobTimer = null, actionCount = 0;
 
         const els = {
+            phone: document.getElementById('phone'),
             onlineBar: document.getElementById('onlineBar'),
             onlineTitle: document.getElementById('onlineTitle'),
             onlineEn: document.getElementById('onlineEn'),
@@ -293,6 +312,140 @@
             rating: document.getElementById('rating'),
             response: document.getElementById('response'),
             gross: document.getElementById('gross'),
+            crew: document.getElementById('crew'),
+            whisper: document.getElementById('whisper'),
+            adFrame: document.getElementById('adFrame'),
+            adTeaserText: document.getElementById('adTeaserText'),
+        };
+
+        /* ===== ゲーム音楽 & 効果音 ===== */
+        const Audio = {
+            ctx: null, master: null, music: null, sfx: null,
+            vol: 0.3, step: 0, timer: null, playing: false,
+            layers: {}, gains: {},
+
+            init() {
+                if (this.ctx) return;
+                const C = window.AudioContext || window.webkitAudioContext;
+                this.ctx = new C();
+                this.master = this.ctx.createGain();
+                this.music = this.ctx.createGain();
+                this.sfx = this.ctx.createGain();
+                this.master.connect(this.ctx.destination);
+                this.music.connect(this.master);
+                this.sfx.connect(this.master);
+                this._buildLayers();
+                this.setVol(this.vol);
+            },
+
+            async unlock() {
+                this.init();
+                if (this.ctx.state === 'suspended') await this.ctx.resume();
+                if (!this.playing) { this.playing = true; this._loop(); }
+            },
+
+            setVol(v) {
+                this.vol = v;
+                if (!this.ctx) return;
+                this.master.gain.setTargetAtTime(v * 0.9, this.ctx.currentTime, 0.05);
+                this.music.gain.setTargetAtTime(v * 0.45, this.ctx.currentTime, 0.05);
+                this.sfx.gain.setTargetAtTime(v * 1.1, this.ctx.currentTime, 0.05);
+                if (this.gains.pad) this.gains.pad.gain.setTargetAtTime(v * 0.06, this.ctx.currentTime, 0.1);
+            },
+
+            _buildLayers() {
+                const c = this.ctx;
+                const mk = (type, freq, filter) => {
+                    const o = c.createOscillator();
+                    o.type = type; o.frequency.value = freq;
+                    const g = c.createGain(); g.gain.value = 0;
+                    let last = o;
+                    if (filter) { const f = c.createBiquadFilter(); f.type = filter.type; f.frequency.value = filter.freq; o.connect(f); last = f; }
+                    last.connect(g); g.connect(this.music);
+                    o.start();
+                    return { o, g };
+                };
+                this.layers.pad = mk('sawtooth', 55, { type: 'lowpass', freq: 300 });
+                this.layers.bass = mk('square', 55, { type: 'lowpass', freq: 180 });
+                this.layers.lead = mk('triangle', 220, null);
+                this.gains = { pad: this.layers.pad.g, bass: this.layers.bass.g, lead: this.layers.lead.g };
+            },
+
+            _loop() {
+                if (!this.playing || !this.ctx) return;
+                const t = this.ctx.currentTime;
+                const v = this.vol;
+                const online = isOnline;
+                const bpm = online ? 118 : 88;
+                const beat = 60 / bpm / 2;
+
+                if (v > 0.05) {
+                    if (this.step % 2 === 0) this._bass(t, online ? 0.18 * v : 0.08 * v);
+                    if (this.step % 2 === 1 && online) this._hat(t, 0.12 * v);
+                    if (this.step % 4 === 0 && online) this._melody(t, 0.1 * v);
+                }
+                this.step++;
+                this.timer = setTimeout(() => this._loop(), beat * 1000);
+            },
+
+            _bass(t, vol) {
+                const notes = [55, 55, 73.42, 82.41, 55, 98, 65.41, 82.41];
+                const f = notes[this.step % notes.length];
+                this.layers.bass.o.frequency.setValueAtTime(f, t);
+                const g = this.gains.bass;
+                g.cancelScheduledValues(t);
+                g.setValueAtTime(vol, t);
+                g.exponentialRampToValueAtTime(0.001, t + 0.14);
+            },
+
+            _melody(t, vol) {
+                const scale = [220, 261.63, 329.63, 392, 329.63, 293.66, 261.63, 220];
+                const f = scale[this.step % scale.length];
+                this.layers.lead.o.frequency.setValueAtTime(f, t);
+                const g = this.gains.lead;
+                g.cancelScheduledValues(t);
+                g.setValueAtTime(vol, t);
+                g.exponentialRampToValueAtTime(0.001, t + 0.2);
+            },
+
+            _hat(t, vol) {
+                const c = this.ctx, len = c.sampleRate * 0.035;
+                const buf = c.createBuffer(1, len, c.sampleRate);
+                const d = buf.getChannelData(0);
+                for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / len);
+                const s = c.createBufferSource(); s.buffer = buf;
+                const g = c.createGain(); g.gain.value = vol;
+                const f = c.createBiquadFilter(); f.type = 'highpass'; f.frequency.value = 9000;
+                s.connect(f); f.connect(g); g.connect(this.music);
+                s.start(t);
+            },
+
+            sfxNote(freqs, dur, type, vol) {
+                if (!this.ctx || this.vol < 0.02) return;
+                const t = this.ctx.currentTime;
+                freqs.forEach((f, i) => {
+                    const o = this.ctx.createOscillator();
+                    o.type = type || 'sine';
+                    o.frequency.value = f;
+                    const g = this.ctx.createGain();
+                    const st = t + i * 0.07;
+                    g.gain.setValueAtTime(0, st);
+                    g.gain.linearRampToValueAtTime(vol * this.vol, st + 0.02);
+                    g.gain.exponentialRampToValueAtTime(0.001, st + dur);
+                    o.connect(g); g.connect(this.sfx);
+                    o.start(st); o.stop(st + dur + 0.05);
+                });
+            },
+
+            playNewJob() { this.sfxNote([880, 1100], 0.12, 'sine', 0.25); },
+            playAccept() { this.sfxNote([523, 659, 784, 1047], 0.15, 'triangle', 0.35); },
+            playRefuse() { this.sfxNote([300, 180], 0.18, 'sawtooth', 0.2); },
+            playToggle(on) {
+                if (on) this.sfxNote([440, 554, 659], 0.12, 'square', 0.2);
+                else this.sfxNote([659, 440], 0.15, 'sine', 0.15);
+            },
+            playCrew() { this.sfxNote([784, 988, 1175], 0.2, 'triangle', 0.25); },
+            playTimeout() { this.sfxNote([200, 160], 0.2, 'square', 0.15); },
         };
 
         function pick(a) { return a[Math.floor(Math.random() * a.length)]; }
@@ -303,24 +456,51 @@
             els.rating.textContent = rating;
             els.response.textContent = response + '%';
             els.gross.textContent = yen(gross);
+            els.crew.textContent = crew;
+        }
+
+        function rotateWhisper() {
+            els.whisper.style.opacity = '0';
+            setTimeout(() => {
+                els.whisper.textContent = pick(WHISPERS);
+                els.whisper.style.opacity = '1';
+            }, 400);
+        }
+
+        function nudgeAd() {
+            els.adTeaserText.textContent = pick(AD_TEASERS);
+            els.adFrame.classList.add('glow');
+            setTimeout(() => els.adFrame.classList.remove('glow'), 2000);
+        }
+
+        function maybeGrowCrew() {
+            if (actionCount > 0 && actionCount % 4 === 0 && crew < 99) {
+                crew++;
+                updateHUD();
+                Audio.playCrew();
+                nudgeAd();
+                rotateWhisper();
+            }
         }
 
         function setOnline(on) {
             isOnline = on;
             els.toggle.classList.toggle('on', on);
             els.onlineBar.classList.toggle('online-active', on);
+            els.phone.classList.toggle('vibin', on);
             clearTimeout(jobTimer);
             currentJob = null;
+            Audio.playToggle(on);
 
             if (on) {
                 els.onlineTitle.textContent = 'オンライン';
-                els.onlineEn.textContent = 'Online — accept or decline orders';
+                els.onlineEn.textContent = 'Orders incoming — your call';
                 els.offlinePanel.classList.add('hidden');
                 els.jobCard.classList.remove('hidden');
                 nextJob();
             } else {
                 els.onlineTitle.textContent = 'オフライン';
-                els.onlineEn.textContent = 'Offline — no orders, no pay';
+                els.onlineEn.textContent = 'Rest mode — flip when ready';
                 els.offlinePanel.classList.remove('hidden');
                 els.jobCard.classList.add('hidden');
             }
@@ -340,13 +520,15 @@
             els.jobTitle.textContent = currentJob.title;
             els.jobEn.textContent = currentJob.en;
             els.jobPay.textContent = yen(currentJob.pay);
+            Audio.playNewJob();
             clearTimeout(jobTimer);
             jobTimer = setTimeout(() => {
                 if (isOnline && currentJob) {
-                    response = clamp(response - 6, 0, 100);
-                    rating = clamp(rating - 4, 0, 100);
+                    response = clamp(response - 5, 0, 100);
+                    rating = clamp(rating - 3, 0, 100);
                     updateHUD();
-                    showResult('タイムアウト\nTimeout — Response ↓');
+                    Audio.playTimeout();
+                    showResult('流れていった…\nMissed it — Response ↓');
                     setTimeout(nextJob, 1400);
                 }
             }, 9000);
@@ -355,34 +537,42 @@
         function acceptJob() {
             if (!isOnline || !currentJob) return;
             clearTimeout(jobTimer);
+            actionCount++;
             gross += currentJob.pay;
             rating = clamp(rating + (currentJob.pay >= 300 ? 3 : 5), 0, 100);
             response = clamp(response + 4, 0, 100);
             updateHUD();
-            showResult(`受注 +${currentJob.pay}円\nAccepted! Earnings ↑`);
-            playAccept();
+            Audio.playAccept();
+            showResult(`+${currentJob.pay}円\nNew route cleared ✓`);
+            maybeGrowCrew();
             setTimeout(nextJob, 1300);
         }
 
         function refuseJob() {
             if (!isOnline || !currentJob) return;
             clearTimeout(jobTimer);
-            rating = clamp(rating - (currentJob.pay >= 300 ? 7 : 5), 0, 100);
-            response = clamp(response - (currentJob.pay >= 300 ? 9 : 6), 0, 100);
+            actionCount++;
+            rating = clamp(rating - (currentJob.pay >= 300 ? 6 : 4), 0, 100);
+            response = clamp(response - (currentJob.pay >= 300 ? 8 : 5), 0, 100);
             updateHUD();
-            showResult(`断った！\nDeclined — Rating ↓`);
-            playRefuse();
+            Audio.playRefuse();
+            showResult('スルー。\nDeclined — your pace, your rules.');
+            maybeGrowCrew();
             setTimeout(nextJob, 1300);
         }
 
-        els.toggle.addEventListener('click', () => {
-            ensureAudio();
-            setOnline(!isOnline);
+        els.toggle.addEventListener('click', () => { Audio.unlock(); setOnline(!isOnline); });
+        document.getElementById('btnAccept').onclick = () => { Audio.unlock(); acceptJob(); };
+        document.getElementById('btnRefuse').onclick = () => { Audio.unlock(); refuseJob(); };
+        document.getElementById('adTeaser').onclick = () => {
+            els.adFrame.classList.toggle('open');
+            if (els.adFrame.classList.contains('open')) crew = Math.min(crew + 1, 99);
+            updateHUD();
+        };
+        document.getElementById('volume').addEventListener('input', e => {
+            Audio.unlock();
+            Audio.setVol(e.target.value / 100);
         });
-        document.getElementById('btnAccept').onclick = acceptJob;
-        document.getElementById('btnRefuse').onclick = refuseJob;
-        document.getElementById('adTeaser').onclick = () =>
-            document.getElementById('adFrame').classList.toggle('open');
 
         function updateClock() {
             const n = new Date();
@@ -391,30 +581,11 @@
         }
         updateClock();
         setInterval(updateClock, 30000);
+        setInterval(rotateWhisper, 12000);
+        setInterval(() => { if (actionCount > 2) nudgeAd(); }, 25000);
 
-        let actx = null;
-        function ensureAudio() {
-            if (!actx) actx = new (window.AudioContext || window.webkitAudioContext)();
-            if (actx.state === 'suspended') actx.resume();
-        }
-        function beep(f, d, v) {
-            if (!actx) return;
-            const t = actx.currentTime, o = actx.createOscillator(), g = actx.createGain();
-            o.frequency.value = f;
-            g.gain.setValueAtTime(v, t);
-            g.gain.exponentialRampToValueAtTime(0.001, t + d);
-            o.connect(g); g.connect(actx.destination);
-            o.start(t); o.stop(t + d);
-        }
-        function playAccept() {
-            const v = document.getElementById('volume').value / 100 * 0.4;
-            beep(880, 0.1, v); setTimeout(() => beep(1200, 0.12, v), 80);
-        }
-        function playRefuse() {
-            beep(120, 0.2, document.getElementById('volume').value / 100 * 0.5);
-        }
-        document.getElementById('volume').addEventListener('input', ensureAudio);
-
+        document.body.addEventListener('click', () => Audio.unlock(), { once: true });
+        Audio.setVol(0.3);
         setOnline(false);
         updateHUD();
     </script>
