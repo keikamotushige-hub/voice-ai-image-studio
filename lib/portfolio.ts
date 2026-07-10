@@ -33,10 +33,10 @@ export const PORTFOLIO: PortfolioEntry[] = [
   },
   {
     id: "pochipochi",
-    title: "配達員・逆襲のポチポチ",
-    subtitle: "バズる置き配ゲーム",
+    title: "Akaban Haitatsuin",
+    subtitle: "赤番配達員",
     description:
-      "配達アプリ風UIで通知カードをタップして粉砕。感謝率・応答率・停止リスク・売上手数料を管理しながらストレスを解放するワンタップゲーム。",
+      "100円・300円の配達案件を受けるか断るか。受注で評価UP＋チップ、断るとストレス解消チップはもらえるが評価・応答率DOWN。",
     url: "/games/okii-pai-puzzle/",
     tags: ["ゲーム", "モバイル", "カジュアル", "HTML5"],
     status: "available",
